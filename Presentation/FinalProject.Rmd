@@ -56,7 +56,7 @@ knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
   In this report, I will check assumptions, look at the correlation between temperature and humdiity, and analyze how the variables have changed individually at Los Angeles international airport across the years.
 
 # Methods
-This report was created based on a compilation of data hosted by the National Oceanic and Atmospheric Administration ([NOAA](ftp://ftp.ncdc.noaa.gov/pub/data/noaa/isd-lite/)). It features hourly meteorological data from LOS ANGELES INTERNATIONAL AIRPORT (LAX), with variables including temperature (Celsius), relative humidity, quantity of time for which precipitation was measured, depth of precipitation, and whether the depth was a trace amount. Additional documentation can be found in this NOAA [PDF](https://www1.ncdc.noaa.gov/pub/data/ish/ish-format-document.pdf) under 'Precipitation Data'. Along with missing values, values for 1996 were removed as it did not have complete, annual observations. Unless specified as otherwise, the data was faceted by year giving each group n=235.
+This report was created based on a compilation of data hosted by the National Oceanic and Atmospheric Administration ([NOAA](ftp://ftp.ncdc.noaa.gov/pub/data/noaa/isd-lite/)). It features hourly meteorological data from LOS ANGELES INTERNATIONAL AIRPORT (LAX), with variables including temperature (Celsius), relative humidity, quantity of time for which precipitation was measured, depth of precipitation, and whether the depth was a trace amount. Additional documentation can be found in this NOAA [PDF](https://www1.ncdc.noaa.gov/pub/data/ish/ish-format-document.pdf) under 'Precipitation Data'. Along with missing values, values for 1972 and 2020 were removed because they did not have complete, annual observations.
 
 
 
@@ -72,26 +72,26 @@ library(lattice)
 Airport <- readRDS("../Data/LA_airport.rds")
 
 cleandata <- Airport %>% 
-    na.omit() %>% 
-    filter(!grepl(9, aa1_3) & !grepl(1, aa1_3) & !grepl(999.9, aa1_2) & !grepl(99, aa1_1), !grepl(9, aa1_4)) %>% 
+    na.omit()  %>% 
     mutate(year = year(time),
            month = factor(months(time),levels = c("January", "February", "March", "April", "May", 
                                                             "June", "July", "August", "September",
                                                             "October", "November", "December")))
 
-cleandata <- cleandata[!(cleandata$year==1996),]
+cleandata <- cleandata[!(cleandata$year==1972),]
+cleandata <- cleandata[!(cleandata$year==2020),]
 ```
 
 ### Assumptions
 This report uses Anova tests for the temperature and relative humidity variables which assumes sample independence, normality, and equality of variances. The sample independence requirement is met. To check for normality, we will plot the variables against a theoretical quantile-quantile plot.  
 
-```{r}
+```{r, fig.width = 10, fig.height=5}
 ggplot(cleandata, aes(sample = temp)) + geom_qq(distribution = qnorm) + 
            geom_qq_line(line.p = c(0.25, 0.75), col = "blue") + ylab("Temperature (Celsius)") +
-           facet_wrap(~ year, nrow = 3) + ylab("Temperature (Celsius)")
+           facet_wrap(~ year, nrow = 5) 
 ```
 
-  The temperature data appears to generally follow the line and suggesting normality. 1999, 2007, 2015, and 2017 have some endpoints straying which is important to keep in mind as we continue the analysis. 
+  The temperature data appears to generally follow the line and suggesting normality. The years 1978, 1981, 1989, 2005, 2010, and 2017 have some endpoints straying which is important to keep in mind as we continue the analysis.
 
 ```{r}
 ggplot(cleandata, aes(sample = rh)) + geom_qq(distribution = qnorm) + 
@@ -100,7 +100,15 @@ ggplot(cleandata, aes(sample = rh)) + geom_qq(distribution = qnorm) +
 
 ```
 
-  The humidity data shows extreme division from the line. The shape of the endpoints suggest left skewed data; meaning that the median value is greater than the mean value. To fix this we will cube the relative humidity data and use that going forward.
+  The humidity data shows extreme division from the line. The shape of the endpoints suggest left skewed data; meaning that the median value is greater than the mean value. To fix this we will cube the relative humidity data and use that going forward. Below is the cubed relative humidity data.
+  
+  
+```{r}
+ggplot(cleandata, aes(sample = rh^3)) + geom_qq(distribution = qnorm) + 
+           geom_qq_line(line.p = c(0.25, 0.75), col = "blue") + ylab("Relative Humidity Cubed") +
+           facet_wrap(~ year, nrow = 3)
+
+```
 
   Lastly, we will test for the equality of variances for each variable by generating a residual vs. fitted values plot.
   
@@ -143,10 +151,10 @@ ggplot(cleandata, aes(x = year, y = temp)) + geom_point() +
        stat_summary(fun = "mean", geom = "point", cex = 3, pch = 21, col = "DarkBlue", bg="blue")
 ```
   
-  On first appearances there does not appear to be significant difference between the groups, but to be sure, we will look at a residual fit plot to determine if the variance is caused by random chance or if year could cause the variation. Before doing this, we must make sure the spreads between groups are relatively similar.
+  On first appearances there does not appear to be significant difference between the groups. There does appear to be a slight upward trend, but to be sure, we will look at a residual fit plot to determine if the variance is caused by random chance or if year could cause the variation. Before doing this, we must make sure the spreads between groups are relatively similar.
 
 
-```{r}
+```{r, fig.width=10, fig.height=5}
 # get residuals, fvalue, and pooled residuals of temperature
 rftemp <- cleandata %>% 
   group_by(year) %>% 
@@ -164,7 +172,7 @@ ggplot(rftemp, aes(y = residuals, x = Pooled.res)) + geom_point(alpha = 0.5) +
   facet_wrap(~ year, nrow = 3)  + xlab("Pooled Residuals") + ylab("Residuals")
 ```
   
-  The pooled residual plot shows that the batches essentially have the same spread except for 2000, 2011, 2015, and 2018. As the sample size of groups were small, this is okay, and we can conclude they all essentially had the same spreads. Because the spreads are similar across batches, we can now do a residual fit plot.
+  The pooled residual plot shows that the batches essentially have the same spread, and because the spreads are similar across batches, we can now do a residual fit plot.
 
 
 ```{r, fig.width= 8, fig.height=4}
@@ -179,7 +187,7 @@ rfs(oneway(temp ~ year, data = cleandata, spread = 1),
 tempregression <- lm(temp ~ year, cleandata)
 anova(tempregression)
 ```
-With α = .05, a p-value of 0.1316 means that we can reject the null hypothesis and cannot conclude whether or not any of the groups' mean are statistically significant.
+With α = .05, a p-value of 2.2 x 10<sup>-16</sup> means that we can reject the null hypothesis and can conclude that some of the temperature means do differ statistically across the years.
 
 
 ### Humidity
@@ -191,10 +199,10 @@ ggplot(cleandata, aes(x = year, y = rh^3)) + geom_point() +
        stat_summary(fun = "mean", geom = "point", cex = 3, pch = 21, col = "DarkBlue", bg="blue")
 ```
 
-  Unlike with temperature, relative humidity does appear to be changing throughout time; the mean temperature in blue is slightly decreasing throughout the years. 
+  Unlike with temperature, relative humidity does appear to have a consistent trend; the mean temperature in blue is varies wildly but appears to be decreasing overall. 
 
 
-```{r}
+```{r, fig.width=10, fig.height=5}
 rfrh <- cleandata %>% 
   group_by(year) %>% 
   mutate(residuals = rh^3 - mean(rh^3)) %>% 
@@ -211,7 +219,7 @@ ggplot(rfrh, aes(y = residuals, x = Pooled.res)) + geom_point(alpha = 0.5) +
   facet_wrap(~ year, nrow = 3)  + xlab("Pooled Residuals") + ylab("Residuals")
 ```
 
-  The spreads between matches are consistent enough, with the sample size of n = 235, to be able to do a residual fit plot.
+  The spreads between matches are consistent enough to be able to do a residual fit plot.
 
 ```{r, fig.width= 8, fig.height=4}
 rfs(oneway(rh^3 ~ year, data = cleandata, spread = 1), 
@@ -221,14 +229,14 @@ rfs(oneway(rh^3 ~ year, data = cleandata, spread = 1),
 The residual fit plot shows that relative humidity was not significant in relation to the residuals; this means that the variation between years could be explained by random chance.
 
 ```{r}
-tempregression <- lm(rh^3 ~ year, cleandata)
-anova(tempregression)
+rhregression <- lm(rh^3 ~ year, cleandata)
+anova(rhregression)
 ```
-With α = .05, a p-value of 1.833 x 10<sup>-12</sup> means that we cannot reject the null hypothesis, and we can conclude that mean relative humidity across the years do statistically differ from one another.
+With α = .05, a p-value of 2.2 x 10<sup>-16</sup> means that we can reject the null hypothesis, and we can conclude that mean relative humidity across the years do statistically differ from one another.
 
 
 # Conclusion
-Humidity and temperature are both highest in the months of July, August, and September. These are the months to be most aware of the issue of density altitude. While it does not appear that mean temperature has changed throughout the years. It does appear that mean humidity has changed significantly in the area surrounding Los Angeles Airport in a negative pattern. 
+Humidity and temperature are both highest in the months of July, August, and September. These are the months to be most aware of the issue of density altitude.The trend for temperature visually appears to increase While there is not a recognizable trend for humidity. Both variables have p-values of 2.2 x 10<sup>-16</sup> which means that they have both changed signficantly across the years.
 
 
 

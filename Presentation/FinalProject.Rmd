@@ -177,7 +177,8 @@ ggplot(rftemp, aes(y = residuals, x = Pooled.res)) + geom_point(alpha = 0.5) +
 
 
 ```{r, fig.width= 8, fig.height=4}
-rfs(oneway(temp ~ year, data = cleandata, spread = 1), 
+segtemp <- sample_n(cleandata, 15000)
+rfs(oneway(temp ~ year, data = segtemp, spread = 1), 
     aspect = 1, 
     ylab = "Temperature (Celsius)", xlab = "F-Values")
 ```

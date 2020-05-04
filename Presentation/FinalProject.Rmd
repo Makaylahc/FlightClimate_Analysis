@@ -127,7 +127,8 @@ abline(h=0, col="blue")
 ### Correlation
 
 ```{r}
-ggplot(cleandata, aes(x = temp, y = rh^3)) + geom_point() + geom_smooth(method = "loess") + xlab("Temperature (Celsuis)") +
+seg <- sample_n(cleandata, 15000)
+ggplot(seg, aes(x = temp, y = rh^3)) + geom_point() + geom_smooth(method = "loess") + xlab("Temperature (Celsuis)") +
   ylab("Relative Humidity")
 ```
   
@@ -135,7 +136,7 @@ ggplot(cleandata, aes(x = temp, y = rh^3)) + geom_point() + geom_smooth(method =
 
   Below is the same information except faceted by month. This plot shows us which months are most "at risk" for high temperatures and high humidity at LAX. 
 ```{r}
-ggplot(cleandata, aes(x = temp, y = rh^3)) + geom_point() + geom_smooth(method = "loess") + 
+ggplot(seg, aes(x = temp, y = rh^3)) + geom_point() + geom_smooth(method = "loess") + 
   facet_wrap(~month, nrow = 3) + xlab("Temperature (Celsius)") + ylab("Relative Humidity")
 ```
 

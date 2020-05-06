@@ -63,7 +63,7 @@ knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
   This report was created based on a compilation of data hosted by the National Oceanic and Atmospheric Administration ([NOAA](ftp://ftp.ncdc.noaa.gov/pub/data/noaa/isd-lite/)). It features hourly meteorological data from LOS ANGELES INTERNATIONAL AIRPORT (LAX), with variables including temperature (Celsius), relative humidity, quantity of time for which precipitation was measured, depth of precipitation, and whether the depth was a trace amount. Additional documentation can be found in this NOAA [PDF](https://www1.ncdc.noaa.gov/pub/data/ish/ish-format-document.pdf) under 'Precipitation Data'. Along with missing values, values for 1972 and 2020 were removed because they did not have complete, annual observations.
 
 ### Software
-
+All analysis were done in R using dplyr, plyr, ggplot2, lubridate, and lattice packages.
 
 ### Assumptions
 
@@ -245,4 +245,6 @@ anova(rhregression)
 
 1. Dotson, Dianne J. “How Temperature & Humidity Are Related.” Sciencing, 23 April. 2018, [sciencing.com/temperature-ampamp-humidity-related-7245642.html](sciencing.com/temperature-ampamp-humidity-related-7245642.html)
 
-2. “Three Hs of Aircraft Performance - Hot, High and Humid.” Desert Jet, 23 Aug. 2011, [www.desertjet.com/2011/08/23/aircraft-performance/](www.desertjet.com/2011/08/23/aircraft-performance/)
+2. Gimond, Manuel. Exploratory Data Analysis in R. [http://mgimond.github.io/ES218/index.html] (http://mgimond.github.io/ES218/index.html) 
+
+3. “Three Hs of Aircraft Performance - Hot, High and Humid.” Desert Jet, 23 Aug. 2011, [www.desertjet.com/2011/08/23/aircraft-performance/](www.desertjet.com/2011/08/23/aircraft-performance/)

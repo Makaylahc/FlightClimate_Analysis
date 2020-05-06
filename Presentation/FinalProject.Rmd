@@ -2,14 +2,16 @@
 title: "Analyzing Heat and Humidity at LA International Airport"
 author: "Makaylah Cowan"
 date: "5/1/2020"
-output: 
+output:
+  word_document:
+    toc: yes
+    toc_depth: '3'
   html_document:
-    toc: true
+    theme: lumen
+    toc: yes
     toc_depth: 3
     toc_float:
-      collapsed: false
-    theme: lumen
-    
+      collapsed: no
 ---
 
 ```{r setup, include=FALSE}
@@ -51,16 +53,20 @@ knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
 
 # Introduction
 
-  Relative humidity is the percentage of water vapor in the air. For example, really saturated air that cannot hold any more water would have a relative humidity of 100%. Relative humidity is often affected by air temperature.  If air temperature increases then the air can hold more water molecules and the relative humidity decreases. Conversely, if air temperature decreases then the air can hold less molecules and relative humidity increases, thus air temperature and humidity are directly related. When thinking of the most ideal flying conditions, typically we think of a bright, sunny, no-wind day, and while this can be the case, it ignores a hidden problem that can arise from these same conditions. Along with sunny days, summer brings heat and humidity which has the potential to cause serious issues with aircraft performance. These issues, called 'density altitude', stems from aerodynamics; humidity and hot air can cause the air to be less dense which makes it harder to sustain flight.
+  Relative humidity is the percentage of water vapor in the air. For reference, really saturated air that cannot hold any more water would have a relative humidity of 100%. If air's temperature increases then it is able to hold more water molecules and the relative humidity decreases. Conversely, if air temperature decreases then the air can hold less molecules and relative humidity increases, thus air temperature and humidity are directly related. Keeping this in mind, when thinking of the most ideal flying conditions, typically we think of a bright, sunny, no-wind day, and while this can be the case, it ignores a hidden problem that can arise from these same conditions. Along with sunny days, summer brings heat and humidity which has the potential to cause serious issues with aircraft performance. These issues, called 'density altitude', stems from aerodynamics; humidity and hot air can cause the air to be less dense which makes it harder to sustain flight.
 
-  In this report, I will check assumptions, look at the correlation between temperature and humdiity, and analyze how the variables have changed individually at Los Angeles international airport across the years.
+  In this report, I will check assumptions, look at the correlation between temperature and humdiity, and analyze how the variables have changed individually at Los Angeles international airport across the years in order to see if there are more instances of high heat, humid days.
 
 # Methods
-This report was created based on a compilation of data hosted by the National Oceanic and Atmospheric Administration ([NOAA](ftp://ftp.ncdc.noaa.gov/pub/data/noaa/isd-lite/)). It features hourly meteorological data from LOS ANGELES INTERNATIONAL AIRPORT (LAX), with variables including temperature (Celsius), relative humidity, quantity of time for which precipitation was measured, depth of precipitation, and whether the depth was a trace amount. Additional documentation can be found in this NOAA [PDF](https://www1.ncdc.noaa.gov/pub/data/ish/ish-format-document.pdf) under 'Precipitation Data'. Along with missing values, values for 1972 and 2020 were removed because they did not have complete, annual observations.
+
+### Data
+  This report was created based on a compilation of data hosted by the National Oceanic and Atmospheric Administration ([NOAA](ftp://ftp.ncdc.noaa.gov/pub/data/noaa/isd-lite/)). It features hourly meteorological data from LOS ANGELES INTERNATIONAL AIRPORT (LAX), with variables including temperature (Celsius), relative humidity, quantity of time for which precipitation was measured, depth of precipitation, and whether the depth was a trace amount. Additional documentation can be found in this NOAA [PDF](https://www1.ncdc.noaa.gov/pub/data/ish/ish-format-document.pdf) under 'Precipitation Data'. Along with missing values, values for 1972 and 2020 were removed because they did not have complete, annual observations.
+
+### Software
 
 
+### Assumptions
 
-# Results
 ```{r}
 # Setup
 library(dplyr)
@@ -85,76 +91,68 @@ cleandata2 <- cleandata
 cleandata <- sample_n(cleandata,10000)
 ```
 
-### Assumptions
-This report uses Anova tests for the temperature and relative humidity variables which assumes sample independence, normality, and equality of variances. The sample independence requirement is met. To check for normality, we will plot the variables against a theoretical quantile-quantile plot.  
-
 ```{r, fig.width = 10, fig.height=5}
 ggplot(cleandata, aes(sample = temp)) + geom_qq(distribution = qnorm) + 
            geom_qq_line(line.p = c(0.25, 0.75), col = "blue") + ylab("Temperature (Celsius)") +
-           facet_wrap(~ year, nrow = 4) 
-```
+           facet_wrap(~ year, nrow = 4) + ggtitle("Figure 1")
 
-  The temperature data appears to generally follow the line and suggesting normality. The years 1978, 1981, 1989, 2005, 2010, and 2017 have some endpoints straying which is important to keep in mind as we continue the analysis.
-
-```{r, fig.width = 10, fig.height=5}
 ggplot(cleandata, aes(sample = rh)) + geom_qq(distribution = qnorm) + 
            geom_qq_line(line.p = c(0.25, 0.75), col = "blue") + ylab("Relative Humidity") +
-           facet_wrap(~ year, nrow = 4) + ylab("Relative Humidity")
+           facet_wrap(~ year, nrow = 4) + ylab("Relative Humidity") +ggtitle("Figure 2")
+
+ggplot(cleandata, aes(sample = rh^2)) + geom_qq(distribution = qnorm) + 
+           geom_qq_line(line.p = c(0.25, 0.75), col = "blue") + ylab("Relative Humidity Squared") +
+           facet_wrap(~ year, nrow = 4) + ggtitle("Figure 3")
 
 ```
 
-  The humidity data shows extreme division from the line. The shape of the endpoints suggest left skewed data; meaning that the median value is greater than the mean value. To fix this we will cube the relative humidity data and use that going forward. Below is the cubed relative humidity data.
-  
-  
-```{r, fig.width = 10, fig.height=5}
-ggplot(cleandata, aes(sample = rh^3)) + geom_qq(distribution = qnorm) + 
-           geom_qq_line(line.p = c(0.25, 0.75), col = "blue") + ylab("Relative Humidity Cubed") +
-           facet_wrap(~ year, nrow = 4)
 
-```
+   For the use of anova tests, the temperature and relative humidity variables must have sample independence, normality, and equality of variances. The sample independence requirement is met based on the experimental setup. Figure 1, a theoretical quantile-quantile plot, shows that temperature data appears to generally follow the distribution line, suggesting normality. The years 1978, 1981, 1989, 2005, 2010, and 2017 have some endpoints straying from the line, but this should not dramatically affect the results.
 
-  Lastly, we will test for the equality of variances for each variable by generating a residual vs. fitted values plot.
+  Plot 2 shows that the humidity data has extreme division from the line, and the shape of the endpoints suggests left skewed data; this meaning that the median value is greater than the mean value. To satisfy the normality requirement of later tests, the relative humdity data will be expressed using by being squared as in Plot 3.
+ 
   
 ```{r}
 tempmod <- lm(temp~time,cleandata)
-plot(tempmod$fitted.values,tempmod$residuals)
+plot(tempmod$fitted.values,tempmod$residuals, main = "Plot 4", xlab= "Fitted Values", ylab = "Residuals")
 abline(h=0, col="blue")
 
-rhmod <- lm(rh^3~time,cleandata)
-plot(rhmod$fitted.values,rhmod$residuals)
+rhmod <- lm(rh^2~time,cleandata2)
+plot(rhmod$fitted.values,rhmod$residuals, main = "Plot 5", xlab= "Fitted Values", ylab = "Residuals")
 abline(h=0, col="blue")
 ```
 
-  From these plots, we can see that there is no apparent trend in the residuals for either variable which means that there is homogeneity in variance, so this assumption is met.
+   Plots 4 and 5 show that there is no apparent trend or pattern in the fitted values vs. residuals for neither the temperature nor the relative humdity data. This suggestst that there is homogeneity in variance for each variable.
+  
+# Results
 
 ### Correlation
 
 ```{r}
-ggplot(cleandata, aes(x = temp, y = rh^3)) + geom_point() + geom_smooth(method = "loess") + xlab("Temperature (Celsuis)") +
-  ylab("Relative Humidity")
+ggplot(cleandata, aes(x = temp, y = rh^2)) + geom_point() + geom_smooth(method = "loess") + xlab("Temperature (Celsuis)") +
+  ylab("Relative Humidity") + ggtitle("Figure 6")
 ```
   
-  As expected, the relationship between temperature and humidity is direct and negative. After a certain temperature, according to our data about 15 degrees celsuis, as temperature increases humidity decreases. Density altitude could occur at the points above the loess fit line where the temperature and humidity are both high.
+  As expected, the relationship between temperature and humidity is direct and negative. After a certain temperature, according to our data at 15 degrees celsuis, as temperature increases humidity decreases. Density altitude could occur at the points above the loess fit line where the temperature and humidity are both high.
 
-  Below is the same information except faceted by month. This plot shows us which months are most "at risk" for high temperatures and high humidity at LAX. 
 ```{r}
-ggplot(cleandata, aes(x = temp, y = rh^3)) + geom_point() + geom_smooth(method = "loess") + 
-  facet_wrap(~month, nrow = 3) + xlab("Temperature (Celsius)") + ylab("Relative Humidity")
+ggplot(cleandata, aes(x = temp, y = rh^2)) + geom_point() + geom_smooth(method = "loess") + 
+  facet_wrap(~month, nrow = 3) + xlab("Temperature (Celsius)") + ylab("Relative Humidity") + ggtitle("Figure 7")
 ```
 
-  July, August, and September are the most at risk for density alitutde because of their high values along the x axis. 
+  The same data except faceted by month shows us which months are most "at risk" for high temperatures and high humidity at LAX. Relative to their number of samples, July, August, and September are the most at risk months because of their temperature values and the number of points above the loess fit line.
 
 
 
 ### Temperature
-  we will now look at temperature as a function of time to see if there has been any significant change. The following graph shows the temperature in celsius across different years. The blue point represents the average temperature for the year.
+  
 ```{r, fig.width=7, fig.height=4}
 ggplot(cleandata, aes(x = year, y = temp)) + geom_point() +
        ylab("Temperature (Celsius)") + xlab("Year") + 
-       stat_summary(fun = "mean", geom = "point", cex = 3, pch = 21, col = "DarkBlue", bg="blue")
+       stat_summary(fun = "mean", geom = "point", cex = 3, pch = 21, col = "DarkBlue", bg="blue") + ggtitle("Figure 8")
 ```
   
-  On first appearances there does not appear to be significant difference between the groups. There does appear to be a slight upward trend, but to be sure, we will look at a residual fit plot to determine if the variance is caused by random chance or if year could cause the variation. Before doing this, we must make sure the spreads between groups are relatively similar.
+  Figure 8 shows temperature as a function of time in years. The blue point represents the average temperature for the each year. On first appearances there does not appear to be significant difference between the groups. There does appear to be a slight upward trend; this will be checked by looking at a residual fit plot to determine if variance is caused by random chance.
 
 
 ```{r, fig.width=10, fig.height=5}
@@ -172,19 +170,19 @@ rftemp <- cleandata %>%
 # spreads essentially have the same spread so we can compare batches in residual-fit plot
 ggplot(rftemp, aes(y = residuals, x = Pooled.res)) + geom_point(alpha = 0.5) + 
   geom_abline(intercept = 0, slope = 1, color = "blue") +
-  facet_wrap(~ year, nrow = 4)  + xlab("Pooled Residuals") + ylab("Residuals")
+  facet_wrap(~ year, nrow = 4)  + xlab("Pooled Residuals") + ylab("Residuals") + ggtitle("Figure 9")
 ```
   
-  The pooled residual plot shows that the batches essentially have the same spread, and because the spreads are similar across batches, we can now do a residual fit plot.
+  The pooled residual plot shows that the batches essentially have the same spread, so it is appropriate to do a residual fit plot.
 
 
 ```{r, fig.width= 8, fig.height=4}
 rfs(oneway(temp ~ year, data = cleandata, spread = 1), 
     aspect = 1, 
-    ylab = "Temperature (Celsius)", xlab = "F-Values")
+    ylab = "Temperature (Celsius)", xlab = "F-Values") + ggtitle("Figure 10")
 ```
   
-  This residual - fit plot shows the temperature data normalized to the global mean against the residuals, with generated f-values. It reveals that the spread of the fitted teperatures across each year is insignificant compared to the spread of the residuals, so temperature differences could be explained by random chance. We will now do an Anova test to see if there are any years that are statistically different. 
+  Figure 10 shows the temperature data normalized to the global mean against the residuals, with generated f-values. It reveals that the spread of the fitted teperatures across each year is insignificant compared to the spread of the residuals, so temperature differences could be explained by random chance. An Anova test will reveal if any years that are statistically different. 
 
 ```{r}
 tempregression <- lm(temp ~ year, cleandata2)
@@ -194,21 +192,20 @@ With α = .05, a p-value of 2.2 x 10<sup>-16</sup> means that we can reject the 
 
 
 ### Humidity
-  We will now analyze relative humidity in the same way. First we begin with a simple plot of relative humidity as a function of time.
 
 ```{r, fig.width=7, fig.height=4}
-ggplot(cleandata, aes(x = year, y = rh^3)) + geom_point() +
+ggplot(cleandata, aes(x = year, y = rh^2)) + geom_point() +
        ylab("Relative Humidity (%)") + xlab("Year") + 
-       stat_summary(fun = "mean", geom = "point", cex = 3, pch = 21, col = "DarkBlue", bg="blue")
+       stat_summary(fun = "mean", geom = "point", cex = 3, pch = 21, col = "DarkBlue", bg="blue") + ggtitle("Figure 11")
 ```
 
-  Unlike with temperature, relative humidity does appear to have a consistent trend; the mean temperature in blue is varies wildly but appears to be decreasing overall. 
+  Unlike with temperature, relative humidity does not appear to have a consistent trend; the mean temperature in blue varies wildly but appears to be decreasing overall. 
 
 
 ```{r, fig.width=10, fig.height=5}
 rfrh <- cleandata %>% 
   group_by(year) %>% 
-  mutate(residuals = rh^3 - mean(rh^3)) %>% 
+  mutate(residuals = rh^2 - mean(rh^2)) %>% 
   dplyr::group_by(year)  %>%
   dplyr::arrange(residuals)  %>% 
   dplyr::mutate(f.val = (row_number(residuals) - 0.5) / n() ) %>%
@@ -219,27 +216,28 @@ rfrh <- cleandata %>%
 # spreads essentially have the same spread so we can compare batches in residual-fit plot
 ggplot(rfrh, aes(y = residuals, x = Pooled.res)) + geom_point(alpha = 0.5) + 
   geom_abline(intercept = 0, slope = 1, color = "blue") +
-  facet_wrap(~ year, nrow = 4)  + xlab("Pooled Residuals") + ylab("Residuals")
+  facet_wrap(~ year, nrow = 4)  + xlab("Pooled Residuals") + ylab("Residuals") ++ ggtitle("Figure 11")
 ```
 
-  The spreads between matches are consistent enough to be able to do a residual fit plot.
 
 ```{r, fig.width= 8, fig.height=4}
-rfs(oneway(rh^3 ~ year, data = cleandata, spread = 1), 
+rfs(oneway(rh^2 ~ year, data = cleandata, spread = 1), 
     aspect = 1, 
-    ylab = "Relative Humidity", xlab = "F-Values")
+    ylab = "Relative Humidity", xlab = "F-Values") + + ggtitle("Figure 12")
 ```
-The residual fit plot shows that relative humidity was not significant in relation to the residuals; this means that the variation between years could be explained by random chance.
+
+ Figure 11 shows that the spreads between matches are consistent enough to be able to do a residual fit plot. Subsequently, figure 12 shows that relative humidity was not significant in relation to the residuals; this means that the variation between years could be explained by random chance.
 
 ```{r}
-rhregression <- lm(rh^3 ~ year, cleandata2)
+rhregression <- lm(rh^2 ~ year, cleandata2)
 anova(rhregression)
 ```
-With α = .05, a p-value of 2.2 x 10<sup>-16</sup> means that we can reject the null hypothesis, and we can conclude that mean relative humidity across the years do statistically differ from one another.
+
+  With α = .05, a p-value of 2.2 x 10<sup>-16</sup> means that we can reject the null hypothesis, and we can conclude that mean relative humidity across the years do statistically differ from one another.
 
 
 # Conclusion
-Humidity and temperature are both highest in the months of July, August, and September. These are the months to be most aware of the issue of density altitude.The trend for temperature visually appears to increase While there is not a recognizable trend for humidity. Both variables have p-values of 2.2 x 10<sup>-16</sup> which means that they have both changed signficantly across the years.
+  Humidity and temperature are both highest in the months of July, August, and September, so these are the months to be most aware of the issue of density altitude. Across time, the trend for temperature visually appears to increase while there is not an immediately recognizable trend for humidity. However, both variables have p-values of 2.2 x 10<sup>-16</sup> which means that they have both changed signficantly across the years. Increased awareness is needed for this issue, especially in the identified months, as these variables continue to change.
 
 
 

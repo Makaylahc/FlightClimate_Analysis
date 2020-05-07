@@ -216,14 +216,14 @@ rfrh <- cleandata %>%
 # spreads essentially have the same spread so we can compare batches in residual-fit plot
 ggplot(rfrh, aes(y = residuals, x = Pooled.res)) + geom_point(alpha = 0.5) + 
   geom_abline(intercept = 0, slope = 1, color = "blue") +
-  facet_wrap(~ year, nrow = 4)  + xlab("Pooled Residuals") + ylab("Residuals") ++ ggtitle("Figure 11")
+  facet_wrap(~ year, nrow = 4)  + xlab("Pooled Residuals") + ylab("Residuals") + ggtitle("Figure 11")
 ```
 
 
 ```{r, fig.width= 8, fig.height=4}
 rfs(oneway(rh^2 ~ year, data = cleandata, spread = 1), 
     aspect = 1, 
-    ylab = "Relative Humidity", xlab = "F-Values") + + ggtitle("Figure 12")
+    ylab = "Relative Humidity", xlab = "F-Values")
 ```
 
  Figure 11 shows that the spreads between matches are consistent enough to be able to do a residual fit plot. Subsequently, figure 12 shows that relative humidity was not significant in relation to the residuals; this means that the variation between years could be explained by random chance.

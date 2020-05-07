@@ -3,15 +3,15 @@ title: "Analyzing Heat and Humidity at LA International Airport"
 author: "Makaylah Cowan"
 date: "5/1/2020"
 output:
-  word_document:
-    toc: yes
-    toc_depth: '3'
   html_document:
     theme: lumen
     toc: yes
     toc_depth: 3
     toc_float:
       collapsed: no
+  word_document:
+    toc: yes
+    toc_depth: '3'
 ---
 
 ```{r setup, include=FALSE}
@@ -109,7 +109,7 @@ ggplot(cleandata, aes(sample = rh^2)) + geom_qq(distribution = qnorm) +
 
    For the use of anova tests, the temperature and relative humidity variables must have sample independence, normality, and equality of variances. The sample independence requirement is met based on the experimental setup. Figure 1, a theoretical quantile-quantile plot, shows that temperature data appears to generally follow the distribution line, suggesting normality. The years 1978, 1981, 1989, 2005, 2010, and 2017 have some endpoints straying from the line, but this should not dramatically affect the results.
 
-  Plot 2 shows that the humidity data has extreme division from the line, and the shape of the endpoints suggests left skewed data; this meaning that the median value is greater than the mean value. To satisfy the normality requirement of later tests, the relative humdity data will be expressed using by being squared as in Plot 3.
+  Plot 2 shows that the humidity data has extreme division from the line, and the shape of the endpoints suggests left skewed data; this meaning that the median value is greater than the mean value. To satisfy the normality requirement of later tests, the relative humdity data will be expressed by being squared as in Plot 3.
  
   
 ```{r}
@@ -179,7 +179,7 @@ ggplot(rftemp, aes(y = residuals, x = Pooled.res)) + geom_point(alpha = 0.5) +
 ```{r, fig.width= 8, fig.height=4}
 rfs(oneway(temp ~ year, data = cleandata, spread = 1), 
     aspect = 1, 
-    ylab = "Temperature (Celsius)", xlab = "F-Values") + ggtitle("Figure 10")
+    ylab = "Temperature (Celsius)", xlab = "F-Values") 
 ```
   
   Figure 10 shows the temperature data normalized to the global mean against the residuals, with generated f-values. It reveals that the spread of the fitted teperatures across each year is insignificant compared to the spread of the residuals, so temperature differences could be explained by random chance. An Anova test will reveal if any years that are statistically different. 

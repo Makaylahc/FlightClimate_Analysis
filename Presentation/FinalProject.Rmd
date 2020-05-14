@@ -55,12 +55,12 @@ knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
 
   Relative humidity is the percentage of water vapor in the air. For reference, really saturated air that cannot hold any more water would have a relative humidity of 100%. If air's temperature increases then it is able to hold more water molecules and the relative humidity decreases. Conversely, if air temperature decreases then the air can hold less molecules and relative humidity increases, thus air temperature and humidity are directly related. Keeping this in mind, when thinking of the most ideal flying conditions, typically we think of a bright, sunny, no-wind day, and while this can be the case, it ignores a hidden problem that can arise from these same conditions. Along with sunny days, summer brings heat and humidity which has the potential to cause serious issues with aircraft performance. These issues, called 'density altitude', stems from aerodynamics; humidity and hot air can cause the air to be less dense which makes it harder to sustain flight.
 
-  In this report, I will check assumptions, look at the correlation between temperature and humdiity, and analyze how the variables have changed individually at Los Angeles international airport across the years in order to see if there are more instances of high heat, humid days.
+  In this report, I will check assumptions, look at the relationship between temperature and humdiity, and analyze how the variables have changed individually at Los Angeles international airport across the years in order to see if there are more instances of high heat, humid days.
 
 # Methods
 
 ### Data
-  This report was created based on a compilation of data hosted by the National Oceanic and Atmospheric Administration ([NOAA](ftp://ftp.ncdc.noaa.gov/pub/data/noaa/isd-lite/)). It features hourly meteorological data from LOS ANGELES INTERNATIONAL AIRPORT (LAX), with variables including temperature (Celsius), relative humidity, quantity of time for which precipitation was measured, depth of precipitation, and whether the depth was a trace amount. Additional documentation can be found in this NOAA [PDF](https://www1.ncdc.noaa.gov/pub/data/ish/ish-format-document.pdf) under 'Precipitation Data'. Along with missing values, values for 1972 and 2020 were removed because they did not have complete, annual observations.
+  This report was created based on a compilation of data hosted by the National Oceanic and Atmospheric Administration ([NOAA](ftp://ftp.ncdc.noaa.gov/pub/data/noaa/isd-lite/)). It features hourly meteorological data from LOS ANGELES INTERNATIONAL AIRPORT (LAX), with variables including temperature (Celsius), relative humidity, quantity of time for which precipitation was measured, volume of precipitation, and whether the depth was a trace amount. Additional documentation can be found in this NOAA [PDF](https://www1.ncdc.noaa.gov/pub/data/ish/ish-format-document.pdf) under 'Precipitation Data'. Along with missing values, values for 1972 and 2020 were removed because they did not have complete, annual observations.
 
 ### Software
 All analysis were done in R using dplyr, plyr, ggplot2, lubridate, and lattice packages.
@@ -82,13 +82,15 @@ cleandata <- Airport %>%
     mutate(year = year(time),
            month = factor(months(time),levels = c("January", "February", "March", "April", "May", 
                                                             "June", "July", "August", "September",
-                                                            "October", "November", "December")))
-
-cleandata <- cleandata[!(cleandata$year==1972),]
-cleandata <- cleandata[!(cleandata$year==2020),]
+                                                            "October", "November", "December"))) %>% 
+  filter(year != 1972, year != 2020) %>% 
+  group_by(year) %>% 
+  mutate(meantemp = mean(temp),
+         meanrh = mean(rh)) %>%
+  ungroup()
 
 cleandata2 <- cleandata
-cleandata <- sample_n(cleandata,10000)
+cleandata <- sample_n(cleandata, 10000)
 ```
 
 ```{r, fig.width = 10, fig.height=5}
@@ -113,31 +115,31 @@ ggplot(cleandata, aes(sample = rh^2)) + geom_qq(distribution = qnorm) +
  
   
 ```{r}
-tempmod <- lm(temp~time,cleandata)
-plot(tempmod$fitted.values,tempmod$residuals, main = "Plot 4", xlab= "Fitted Values", ylab = "Residuals")
-abline(h=0, col="blue")
+tempmod <- lm(temp ~ year,cleandata)
+plot(tempmod$fitted.values,tempmod$residuals, main = "Plot 4", xlab= "Fitted Values", ylab = "Residuals", cex = 0.4, col = rgb(0,0,0,0.3) )
+abline(h=0, col="blue", cex = .9)
 
-rhmod <- lm(rh^2~time,cleandata2)
-plot(rhmod$fitted.values,rhmod$residuals, main = "Plot 5", xlab= "Fitted Values", ylab = "Residuals")
+rhmod <- lm(rh^2 ~ year,cleandata2)
+plot(rhmod$fitted.values,rhmod$residuals, main = "Plot 5", xlab= "Fitted Values", ylab = "Residuals", cex = 0.4, col = rgb(0,0,0,0.3))
 abline(h=0, col="blue")
 ```
 
-   Plots 4 and 5 show that there is no apparent trend or pattern in the fitted values vs. residuals for neither the temperature nor the relative humdity data. This suggestst that there is homogeneity in variance for each variable.
+   Plots 4 and 5 show that there is no apparent trend or pattern in the fitted values vs. residuals for neither the temperature nor the relative humdity data. This suggests that there is homogeneity in variance for each variable.
   
 # Results
 
-### Correlation
+### Relationship - Temperature and Humidity
 
 ```{r}
 ggplot(cleandata, aes(x = temp, y = rh^2)) + geom_point() + geom_smooth(method = "loess") + xlab("Temperature (Celsuis)") +
-  ylab("Relative Humidity") + ggtitle("Figure 6")
+  ylab("Relative Humidity Squared") + ggtitle("Figure 6")
 ```
   
-  As expected, the relationship between temperature and humidity is direct and negative. After a certain temperature, according to our data at 15 degrees celsuis, as temperature increases humidity decreases. Density altitude could occur at the points above the loess fit line where the temperature and humidity are both high.
+  As expected, the relationship between temperature and humidity is negative. After a certain temperature, according to our data at 15 degrees celsuis, as temperature increases humidity decreases. Density altitude could occur at the points above the loess fit line where the temperature and humidity are both high.
 
 ```{r}
 ggplot(cleandata, aes(x = temp, y = rh^2)) + geom_point() + geom_smooth(method = "loess") + 
-  facet_wrap(~month, nrow = 3) + xlab("Temperature (Celsius)") + ylab("Relative Humidity") + ggtitle("Figure 7")
+  facet_wrap(~month, nrow = 3) + xlab("Temperature (Celsius)") + ylab("Relative Humidity Squared") + ggtitle("Figure 7")
 ```
 
   The same data except faceted by month shows us which months are most "at risk" for high temperatures and high humidity at LAX. Relative to their number of samples, July, August, and September are the most at risk months because of their temperature values and the number of points above the loess fit line.
@@ -147,9 +149,11 @@ ggplot(cleandata, aes(x = temp, y = rh^2)) + geom_point() + geom_smooth(method =
 ### Temperature
   
 ```{r, fig.width=7, fig.height=4}
-ggplot(cleandata, aes(x = year, y = temp)) + geom_point() +
-       ylab("Temperature (Celsius)") + xlab("Year") + 
-       stat_summary(fun = "mean", geom = "point", cex = 3, pch = 21, col = "DarkBlue", bg="blue") + ggtitle("Figure 8")
+ggplot(cleandata, aes(x = as.factor(year), y = temp)) + geom_violin() +
+  ylab("Temperature (Celsius)") + xlab("Year") + 
+  stat_summary(fun = "mean", geom = "point", cex = 3, pch = 21, col = "DarkBlue", bg="blue") + ggtitle("Figure 8") +
+  theme(axis.text.x = element_text(angle = -45, size = 5))
+
 ```
   
   Figure 8 shows temperature as a function of time in years. The blue point represents the average temperature for the each year. On first appearances there does not appear to be significant difference between the groups. There does appear to be a slight upward trend; this will be checked by looking at a residual fit plot to determine if variance is caused by random chance.
@@ -195,11 +199,12 @@ With α = .05, a p-value of 2.2 x 10<sup>-16</sup> means that we can reject the 
 
 ```{r, fig.width=7, fig.height=4}
 ggplot(cleandata, aes(x = year, y = rh^2)) + geom_point() +
-       ylab("Relative Humidity (%)") + xlab("Year") + 
+       ylab("Relative Humidity Squared") + xlab("Year") + 
        stat_summary(fun = "mean", geom = "point", cex = 3, pch = 21, col = "DarkBlue", bg="blue") + ggtitle("Figure 11")
 ```
 
-  Unlike with temperature, relative humidity does not appear to have a consistent trend; the mean temperature in blue varies wildly but appears to be decreasing overall. 
+  Unlike with temperature, relative humidity does not appear to have a consistent trend; the mean temperature in blue varies wildly but appears to be decreasing overall. The plot also seems to suggest breakpoints in the data which may reflect synoptic multi-year changes in weather patterns or changes in instrumentation and reporting method.
+
 
 
 ```{r, fig.width=10, fig.height=5}
@@ -219,11 +224,11 @@ ggplot(rfrh, aes(y = residuals, x = Pooled.res)) + geom_point(alpha = 0.5) +
   facet_wrap(~ year, nrow = 4)  + xlab("Pooled Residuals") + ylab("Residuals") + ggtitle("Figure 11")
 ```
 
-
+ 
 ```{r, fig.width= 8, fig.height=4}
 rfs(oneway(rh^2 ~ year, data = cleandata, spread = 1), 
     aspect = 1, 
-    ylab = "Relative Humidity", xlab = "F-Values")
+    ylab = "Relative Humidity Squared", xlab = "F-Values")
 ```
 
  Figure 11 shows that the spreads between matches are consistent enough to be able to do a residual fit plot. Subsequently, figure 12 shows that relative humidity was not significant in relation to the residuals; this means that the variation between years could be explained by random chance.
@@ -245,6 +250,8 @@ anova(rhregression)
 
 1. Dotson, Dianne J. “How Temperature & Humidity Are Related.” Sciencing, 23 April. 2018, [sciencing.com/temperature-ampamp-humidity-related-7245642.html](sciencing.com/temperature-ampamp-humidity-related-7245642.html)
 
-2. Gimond, Manuel. Exploratory Data Analysis in R. [http://mgimond.github.io/ES218/index.html] (http://mgimond.github.io/ES218/index.html) 
+2. Gimond, Manuel. Exploratory Data Analysis in R. [http://mgimond.github.io/ES218/index.html](http://mgimond.github.io/ES218/index.html) 
 
 3. “Three Hs of Aircraft Performance - Hot, High and Humid.” Desert Jet, 23 Aug. 2011, [www.desertjet.com/2011/08/23/aircraft-performance/](www.desertjet.com/2011/08/23/aircraft-performance/)
+
+4. R Core Team (2019). R: A language and environment for  statistical computing. R Foundation for Statistical   Computing, Vienna, Austria. URL   https://www.R-project.org/.

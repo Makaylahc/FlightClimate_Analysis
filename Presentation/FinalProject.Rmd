@@ -203,7 +203,7 @@ ggplot(cleandata, aes(x = year, y = rh^2)) + geom_point() +
        stat_summary(fun = "mean", geom = "point", cex = 3, pch = 21, col = "DarkBlue", bg="blue") + ggtitle("Figure 11")
 ```
 
-  Unlike with temperature, relative humidity does not appear to have a consistent trend; the mean temperature in blue varies wildly but appears to be decreasing overall. The plot also seems to suggest breakpoints in the data which may reflect synoptic multi-year changes in weather patterns or changes in instrumentation and reporting method.
+  Unlike with temperature, relative humidity does not appear to have a consistent trend; the mean temperature in blue varies wildly but appears to be decreasing overall. The plot also seems to suggest breakpoints in the data which may reflect multi-year weather pattern changes or differences in the instruments or reporting.
 
 
 
@@ -242,7 +242,7 @@ anova(rhregression)
 
 
 # Conclusion
-  Humidity and temperature are both highest in the months of July, August, and September, so these are the months to be most aware of the issue of density altitude. Across time, the trend for temperature visually appears to increase while there is not an immediately recognizable trend for humidity. However, both variables have p-values of 2.2 x 10<sup>-16</sup> which means that they have both changed signficantly across the years. Increased awareness is needed for this issue, especially in the identified months, as these variables continue to change.
+  Humidity and temperature are both highest in the months of July, August, and September, so these are the months to be most aware of the issue of density altitude. Across time, the trend for temperature visually appears to increase while there is not an immediately recognizable trend for humidity. However, both variables have p-values of 2.2 x 10<sup>-16</sup> which means that they have both changed signficantly across the years. Because of the challenges in the humidity data, additional data is needed to confirm the anova test conclusion. Additionally, pressure information would be useful in creating a regression analysis for density altitude. Overall, increased awareness is needed for this issue, especially in the identified months, as these variables continue to change.
 
 
 
